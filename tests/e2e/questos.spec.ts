@@ -50,9 +50,9 @@ test('mobile dashboard and file game work without layout overflow',async({page})
   await expect(page.getByRole('heading',{name:'Review your organized files'})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
-test('public endpoints fail closed and demo quest generation is available',async({request})=>{
+test('public endpoints fail closed and demo quest generation is available',async({request,baseURL})=>{
   const status=await request.get('/api/status');expect(status.ok()).toBe(true);
-  const origin='http://localhost:3000';
+  const origin=baseURL||'http://localhost:3000';
   const cross=await request.post('/api/gmail/execute',{headers:{origin:'https://evil.example'},data:{}});expect(cross.status()).toBe(403);
   const unauth=await request.post('/api/gmail/plan',{headers:{origin},data:{}});expect([401,503]).toContain(unauth.status());
   const receipts=await request.get('/api/receipts');expect([401,503]).toContain(receipts.status());
