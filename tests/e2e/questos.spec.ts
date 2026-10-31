@@ -1,0 +1,63 @@
+import {test,expect} from '@playwright/test';
+import JSZip from 'jszip';
+import {readFile} from 'node:fs/promises';
+test('demo inbox requires approval, awards XP, survives refresh and supports undo',async({page})=>{
+  await page.goto('/');await expect(page.getByRole('heading',{name:'A little play. A clearer day.'})).toBeVisible();
+  await page.getByRole('button',{name:'Inbox Kingdom',exact:true}).click();
+  await page.getByRole('button',{name:'Scan & start quest'}).click();
+  await expect(page.getByRole('heading',{name:'Your weekly design inspiration'})).toBeVisible();
+  await page.getByRole('button',{name:'Archive Clear from inbox 1'}).click();
+  await page.getByRole('button',{name:'Label Add QuestOS/Cleared 2'}).click();
+  for(let i=0;i<4;i++)await page.getByRole('button',{name:'Keep Leave it as it is 3'}).click();
+  await expect(page.getByRole('heading',{name:'Review your cleanup plan'})).toBeVisible();
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('questos.v1.receipts')||'[]').length)).toBe(0);
+  await page.getByRole('button',{name:'Approve demo cleanup'}).click();
+  await expect(page.getByRole('heading',{name:'A little less chaos. A well-earned win.'})).toBeVisible();
+  await expect(page.getByText('+50',{exact:true})).toBeVisible();
+  await page.reload();await page.getByRole('button',{name:'Activity & receipts'}).click();
+  await expect(page.getByText('2 sample changes simulated. No Gmail actions were performed.')).toBeVisible();
+  await page.getByRole('button',{name:'Undo changes'}).click();await expect(page.getByText('undone',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Achievements',exact:true}).click();await expect(page.getByText('0 total XP · 250 XP until level 1')).toHaveCount(0);
+  await expect(page.getByText('0 total XP · 250 XP until level 2')).toBeVisible();
+});
+test('File Forest creates a real byte-accurate ZIP and manifest from uploaded files',async({page})=>{
+  await page.goto('/');await page.getByRole('button',{name:'File Forest',exact:true}).click();
+  await page.getByLabel('Select files to organize').setInputFiles([{name:'notes.txt',mimeType:'text/plain',buffer:Buffer.from('important notes')},{name:'copy.txt',mimeType:'text/plain',buffer:Buffer.from('important notes')},{name:'budget.csv',mimeType:'text/csv',buffer:Buffer.from('item,cost\nCoffee,120')}]);
+  await expect(page.getByRole('heading',{name:'Bring order to the wild'})).toBeVisible();
+  await page.getByRole('button',{name:'Go straight to review'}).click();
+  await expect(page.getByText('Omitted · exact duplicate')).toBeVisible();
+  const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Approve & download ZIP'}).click();
+  const download=await downloadPromise;expect(download.suggestedFilename()).toBe('questos-file-forest.zip');
+  const zip=await JSZip.loadAsync(await readFile((await download.path())!));
+  expect(await zip.file('Documents/notes.txt')!.async('text')).toBe('important notes');
+  expect(zip.file('Documents/copy.txt')).toBeNull();
+  expect(await zip.file('Spreadsheets/budget.csv')!.async('text')).toBe('item,cost\nCoffee,120');
+  const manifest=JSON.parse(await zip.file('questos-manifest.json')!.async('text'));expect(manifest.files).toHaveLength(3);expect(manifest.files[1].duplicateOf).toBe('notes.txt');
+  await expect(page.getByRole('link',{name:'Download ZIP again'})).toBeVisible();
+});
+test('mobile dashboard and file game work without layout overflow',async({page})=>{
+  await page.setViewportSize({width:390,height:844});await page.goto('/');
+  await expect(page.getByRole('heading',{name:'A little play. A clearer day.'})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:'test-results/dashboard-mobile.png',fullPage:true});
+  await page.getByRole('button',{name:'File Forest',exact:true}).click();await page.getByRole('button',{name:'Try with 6 sample files'}).click();
+  for(const category of ['Documents','Documents','Documents','Spreadsheets','Code','Documents'])await page.getByRole('button',{name:category,exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Review your organized files'})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+test('public endpoints fail closed and demo quest generation is available',async({request})=>{
+  const status=await request.get('/api/status');expect(status.ok()).toBe(true);
+  const origin='http://localhost:3000';
+  const cross=await request.post('/api/gmail/execute',{headers:{origin:'https://evil.example'},data:{}});expect(cross.status()).toBe(403);
+  const unauth=await request.post('/api/gmail/plan',{headers:{origin},data:{}});expect([401,503]).toContain(unauth.status());
+  const receipts=await request.get('/api/receipts');expect([401,503]).toContain(receipts.status());
+  const demo=await request.post('/api/quest',{headers:{origin},data:{module:'inbox',count:6,demo:true}});expect(demo.ok()).toBe(true);expect((await demo.json()).source).toBe('rules');
+  const invalid=await request.post('/api/quest',{headers:{origin},data:{module:'inbox',count:9999,demo:true}});expect(invalid.status()).toBe(400);
+});
+test('desktop dashboard has no browser errors',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.setViewportSize({width:1440,height:1100});await page.goto('/');await expect(page.getByRole('heading',{name:'Choose your next adventure'})).toBeVisible();
+  await page.screenshot({path:'test-results/dashboard-desktop.png',fullPage:true});
+  await page.getByRole('button',{name:'Integrations',exact:true}).click();await expect(page.getByRole('heading',{name:'A secure start for your kingdom.'})).toBeVisible();
+  expect(errors).toEqual([]);
+});

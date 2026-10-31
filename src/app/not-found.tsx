@@ -1,0 +1,1 @@
+export default function NotFound() {return <main><section className="panel empty"><h1>This path is off the map.</h1><p>Return to your quest dashboard to find your next adventure.</p><a className="button" href="/">Back to QuestOS</a></section></main>;}
