@@ -14,7 +14,7 @@ export function categoryFor(name: string): string {
 }
 export function safeName(name: string): string {
   // eslint-disable-next-line no-control-regex -- strip unsafe control characters from ZIP entry names
-  let clean = name.replace(/[\x00-\x1f<>:"/\\|?*]/g, '_').replace(/^\.+/, '_').replace(/[. ]+$/, '_').slice(0,180) || 'untitled';
+  let clean = name.normalize('NFC').replace(/[\x00-\x1f<>:"/\\|?*]/g, '_').replace(/^\.+/, '_').replace(/[. ]+$/, '_').slice(0,180) || 'untitled';
   if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(clean)) clean = `_${clean}`;
   return clean;
 }

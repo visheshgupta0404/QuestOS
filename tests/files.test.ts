@@ -40,3 +40,7 @@ test('unreadable files fail clearly, unknown types are retained, and sanitized n
   for(const [i,e] of entries.entries())assert.equal(await e.file.text(),['a','b','binary'][i]);
   await assert.rejects(createOrganizedZip([],true),/no approved files/);
 });
+test('Unicode-equivalent filenames cannot collide when the ZIP is extracted',async()=>{
+  const entries=await analyzeFiles([new File(['one'],'café.txt'),new File(['two'],'cafe\u0301.txt')]);
+  assert.equal(new Set(entries.map(e=>e.path.normalize('NFC').toLowerCase())).size,2);
+});

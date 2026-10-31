@@ -53,3 +53,13 @@ test('fresh execution heartbeat blocks undo even for an older receipt',async()=>
  const f=await fixture();await f.local.from('quest_receipts').insert({id:'p',user_id:'owner',status:'executing',count:0,changes:[],detail:'active',created_at:'2000-01-01',updated_at:new Date().toISOString()});
  await assert.rejects(undoReceiptCore('owner','p',f.services),/still in progress/);assert.equal(f.writes(),0);f.local.sqlite.close();
 });
+test('a delayed execution cannot overwrite a receipt already restored by recovery',async()=>{
+ const f=await fixture();const original=f.services.googleFetch;
+ f.services.googleFetch=async(path,init)=>{await original(path,init);f.mailbox.get('m1')!.labels.push('INBOX');await f.local.from('quest_receipts').update({status:'undone',detail:'Restored by another recovery worker'}).eq('id','p');return {};};
+ const r=await executePlanCore('owner','p',[{id:'m1',action:'archive'},{id:'m2',action:'keep'}],f.services);
+ assert.equal(r.status,'undone');assert.equal(r.xp,0);f.local.sqlite.close();
+});
+test('database unavailability is reported as unavailable, not a missing quest',async()=>{
+ const f=await fixture();f.local.sqlite.close();
+ await assert.rejects(executePlanCore('owner','p',f.decisions,f.services),(e:unknown)=>!!e&&typeof e==='object'&&'status' in e&&e.status===503);
+});

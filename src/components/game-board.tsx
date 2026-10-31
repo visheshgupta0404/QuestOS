@@ -1,9 +1,10 @@
 'use client';
 import { useEffect, useRef } from 'react';
-export default function GameBoard({progress,total,kind}:{progress:number;total:number;kind:'inbox'|'files'}) {
+export default function GameBoard({progress,total,kind,paused=false}:{progress:number;total:number;kind:'inbox'|'files';paused?:boolean}) {
   const parent = useRef<HTMLDivElement>(null);
   const game = useRef<import('phaser').Game | null>(null);
   const latest = useRef(progress);
+  const pausedNow=useRef(paused);pausedNow.current=paused;
   latest.current = progress;
   useEffect(()=>{
     let disposed = false;
@@ -28,8 +29,10 @@ export default function GameBoard({progress,total,kind}:{progress:number;total:n
         }
       }
       game.current = new Phaser.Game({type:Phaser.CANVAS,width:760,height:170,parent:parent.current,transparent:true,scene:QuestScene,banner:false,audio:{noAudio:true},fps:{target:30},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH}});
+      if(pausedNow.current)game.current.loop.sleep();
     }).catch(()=>{/* The board is decorative; accessible task controls remain usable if the renderer cannot load. */});
     return ()=>{disposed=true;game.current?.destroy(true);game.current=null;};
   },[kind,total]);
+  useEffect(()=>{if(paused)game.current?.loop.sleep();else game.current?.loop.wake();},[paused]);
   return <div className="game-board" ref={parent} aria-hidden="true"/>;
 }
