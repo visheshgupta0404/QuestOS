@@ -35,3 +35,21 @@ test('cleanup recommendations protect important mail and retain likely receipts'
  const r=recommendCleanup([{...base,id:'1',subject:'Sale ends today'},{...base,id:'2',subject:'Your invoice'},{...base,id:'3',subject:'Promo',labels:[...base.labels,'STARRED']}]);
  assert.deepEqual(r.map(x=>x.action),['archive','label','keep']);assert(r.every(x=>x.reason.length>10));
 });
+test('missing API key or model falls back to built-in story without network call',async()=>{
+ let called=false;
+ const fetcher:typeof fetch=async()=>{called=true;return new Response('',{status:200});};
+ const r1=await generateQuest('inbox',3,{fetcher});
+ assert.equal(r1.source,'rules');
+ assert.equal(called,false);
+ const r2=await generateQuest('files',2,{key:'k',fetcher});
+ assert.equal(r2.source,'rules');
+ assert.equal(called,false);
+});
+test('recommendCleanup handles empty message list',()=>{
+ assert.deepEqual(recommendCleanup([]),[]);
+});
+test('recommendCleanup labels receipt-like subjects correctly',()=>{
+ const base={from:'shop@example.invalid',date:'2026-01-01',labels:['INBOX','CATEGORY_PROMOTIONS']};
+ const r=recommendCleanup([{...base,id:'r1',subject:'Your invoice #1234'}]);
+ assert.equal(r[0].action,'label');
+});

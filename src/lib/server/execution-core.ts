@@ -1,8 +1,34 @@
 import type { Decision, Message, Receipt } from '../types';
 import type { db } from './db';
 import { ApiError } from '../errors';
+
+/** Experience points awarded per verified message change. */
+export const XP_PER_MESSAGE = 25;
+/** Lease grace period in milliseconds (2 minutes) before an interrupted execution or undo can be claimed. */
+export const LEASE_GRACE_MS = 120_000;
+
 function check(error: unknown) { if(error) throw new ApiError(503,'Receipt storage is unavailable.'); }
-export type ExecutionServices = { store: ReturnType<typeof db>; readMessage: (id:string)=>Promise<Message>; cleanupLabel: ()=>Promise<string>; googleFetch: (path:string,init?:RequestInit)=>Promise<unknown> };
+
+/** Database row structure for quest receipts. */
+export interface ReceiptRow {
+  id: string;
+  user_id: string;
+  status: string;
+  count: number;
+  changes?: unknown;
+  detail?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+/** Dependencies required to execute and undo quest plans against Gmail and database storage. */
+export type ExecutionServices = {
+  store: ReturnType<typeof db>;
+  readMessage: (id:string)=>Promise<Message>;
+  cleanupLabel: ()=>Promise<string>;
+  googleFetch: (path:string,init?:RequestInit)=>Promise<unknown>;
+};
+
 async function transition(store: ExecutionServices['store'],id:string,userId:string,expected:string,values:Record<string,unknown>,lease?:string){
   let query=store.from('quest_receipts').update(values).eq('id',id).eq('user_id',userId).eq('status',expected);
   if(lease)query=query.eq('updated_at',lease);
@@ -12,12 +38,24 @@ async function transition(store: ExecutionServices['store'],id:string,userId:str
   if(!current.data)throw new ApiError(409,'The execution receipt changed. Refresh activity before retrying.');
   return current.data;
 }
+
 function nextHeartbeat(previous:string){return new Date(Math.max(Date.now(),Date.parse(previous)+1)).toISOString();}
+
+/** Represents label delta additions and removals planned for a specific Gmail message. */
 export type Change = { id: string; add: string[]; remove: string[] };
+
+/**
+ * Maps a database receipt row into a user-facing Receipt domain object.
+ */
 export function receiptView(row: Record<string, unknown>): Receipt {
   const status = row.status as Receipt['status'];
-  return { id: row.id as string, module: 'inbox', title: 'Inbox Kingdom cleanup', count: Number(row.count || 0), xp: status === 'verified' ? Number(row.count || 0)*25 : 0, createdAt: row.created_at as string, mode: 'live', status, detail: row.detail as string || 'Execution recorded.', canUndo: ['verified','partial','failed'].includes(status) || (status === 'executing' && Date.now()-Date.parse((row.updated_at||row.created_at) as string)>120_000) };
+  return { id: row.id as string, module: 'inbox', title: 'Inbox Kingdom cleanup', count: Number(row.count || 0), xp: status === 'verified' ? Number(row.count || 0)*XP_PER_MESSAGE : 0, createdAt: row.created_at as string, mode: 'live', status, detail: row.detail as string || 'Execution recorded.', canUndo: ['verified','partial','failed'].includes(status) || (status === 'executing' && Date.now()-Date.parse((row.updated_at||row.created_at) as string)>LEASE_GRACE_MS) };
 }
+
+/**
+ * Validates, claims, executes, and verifies an approved quest plan against Gmail.
+ * Guarantees idempotency via atomic plan claiming and receipt logging before mutation.
+ */
 export async function executePlanCore(userId: string, planId: string, decisions: Decision[], services: ExecutionServices) {
   const {store,readMessage,cleanupLabel,googleFetch} = services;
   const { data: plan, error } = await store.from('quest_plans').select('*').eq('id',planId).eq('user_id',userId).maybeSingle();
@@ -68,14 +106,18 @@ export async function executePlanCore(userId: string, planId: string, decisions:
     throw e;
   }
 }
+/**
+ * Undoes an executed quest receipt by reversing approved label deltas.
+ * Verified with read-after-write; restores INBOX and strips QuestOS/Cleared.
+ */
 export async function undoReceiptCore(userId: string, id: string, services: ExecutionServices) {
   const {store,readMessage,googleFetch} = services;
   const found = await store.from('quest_receipts').select('*').eq('id',id).eq('user_id',userId).maybeSingle();
   check(found.error);
   if (!found.data) throw new ApiError(404,'Receipt not found.');
   if (found.data.status === 'undone') return receiptView(found.data);
-  if (found.data.status === 'executing' && Date.now()-Date.parse(found.data.updated_at)<120_000) throw new ApiError(409,'Execution is still in progress. Wait before recovery.');
-  if (found.data.status === 'undoing' && Date.now()-Date.parse(found.data.updated_at)<120_000) throw new ApiError(409,'Undo is in progress.');
+  if (found.data.status === 'executing' && Date.now()-Date.parse(found.data.updated_at)<LEASE_GRACE_MS) throw new ApiError(409,'Execution is still in progress. Wait before recovery.');
+  if (found.data.status === 'undoing' && Date.now()-Date.parse(found.data.updated_at)<LEASE_GRACE_MS) throw new ApiError(409,'Undo is in progress.');
   const claim = await store.from('quest_receipts').update({ status:'undoing', updated_at:new Date().toISOString() }).eq('id',id).eq('user_id',userId).eq('status',found.data.status).eq('updated_at',found.data.updated_at).select('*').single();
   if (claim.error || !claim.data) throw new ApiError(409,'Receipt is busy. Refresh and try again.');
   let lease=claim.data.updated_at as string;

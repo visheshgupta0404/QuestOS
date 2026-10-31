@@ -9,3 +9,11 @@ test('JSON parsing validates encoding/media and rejects malformed or excessive b
  await assert.rejects(readJson(req('x'.repeat(MAX_JSON_BYTES+1))),status(413));
  await assert.rejects(readJson(req('{}',{'Content-Length':String(MAX_JSON_BYTES+1)})),status(413));
 });
+test('readJson handles content-type with charset and rejects missing headers/body',async()=>{
+ const withCharset = new Request('http://localhost/api/test',{method:'POST',headers:{'Content-Type':'application/json; charset=utf-8'},body:'{"ok":1}'});
+ assert.deepEqual(await readJson(withCharset),{ok:1});
+ const noContentType = new Request('http://localhost/api/test',{method:'POST',body:'{"ok":1}'});
+ await assert.rejects(readJson(noContentType),status(415));
+ const noBody = new Request('http://localhost/api/test',{method:'GET',headers:{'Content-Type':'application/json'}});
+ await assert.rejects(readJson(noBody),status(400));
+});

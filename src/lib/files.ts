@@ -1,6 +1,12 @@
 import JSZip from 'jszip';
 import type { FileEntry } from './types';
+
+/** Maximum total size in bytes (100 MB) permitted across all selected files. */
 export const MAX_TOTAL_BYTES = 100 * 1024 * 1024;
+
+/**
+ * Determines target folder category based on file extension.
+ */
 export function categoryFor(name: string): string {
   const ext = name.split('.').pop()?.toLowerCase() || '';
   if (['png','jpg','jpeg','webp','svg','gif','avif','heic'].includes(ext)) return 'Images';
@@ -12,12 +18,22 @@ export function categoryFor(name: string): string {
   if (['js','ts','tsx','jsx','py','html','css','json','yaml','yml'].includes(ext)) return 'Code';
   return 'Other';
 }
+
+/**
+ * Sanitizes a file name for safe ZIP archive packaging,
+ * stripping control characters and Windows-reserved names.
+ */
 export function safeName(name: string): string {
   // eslint-disable-next-line no-control-regex -- strip unsafe control characters from ZIP entry names
   let clean = name.normalize('NFC').replace(/[\x00-\x1f<>:"/\\|?*]/g, '_').replace(/^\.+/, '_').replace(/[. ]+$/, '_').slice(0,180) || 'untitled';
   if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(clean)) clean = `_${clean}`;
   return clean;
 }
+
+/**
+ * Analyzes selected browser files: computes SHA-256 hashes, detects duplicates,
+ * assigns categories, and prepares collision-safe destination paths.
+ */
 export async function analyzeFiles(files: File[]): Promise<FileEntry[]> {
   if (!files.length) throw new Error('Choose at least one file.');
   if (files.length > 250 || files.reduce((n, f) => n + f.size, 0) > MAX_TOTAL_BYTES) throw new Error('Choose up to 250 files, totaling 100 MB or less.');
@@ -40,6 +56,10 @@ export async function analyzeFiles(files: File[]): Promise<FileEntry[]> {
   }
   return entries;
 }
+/**
+ * Creates an organized ZIP archive containing sorted files and a SHA-256 manifest.
+ * Performs read-after-write verification of every archive entry before returning the Blob.
+ */
 export async function createOrganizedZip(entries: FileEntry[], omitDuplicates: boolean, onProgress?: (percent: number) => void) {
   if(!entries.length)throw new Error('There are no approved files to pack.');
   const zip = new JSZip();

@@ -1,5 +1,12 @@
 import {ApiError} from './errors';
+/** Maximum allowed size in bytes for a JSON request body (16 KB). */
 export const MAX_JSON_BYTES=16*1024;
+/**
+ * Reads and parses a JSON request body with strict validation.
+ * Throws ApiError(415) if the Content-Type is not application/json.
+ * Throws ApiError(413) if the body exceeds MAX_JSON_BYTES.
+ * Throws ApiError(400) if the body is missing or not valid JSON.
+ */
 export async function readJson(req:Request):Promise<unknown>{
  if(req.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json')throw new ApiError(415,'Send this request as application/json.');
  const length=Number(req.headers.get('content-length'));if(Number.isFinite(length)&&length>MAX_JSON_BYTES)throw new ApiError(413,'Request is too large.');

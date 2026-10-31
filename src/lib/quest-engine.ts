@@ -1,9 +1,15 @@
 import { z } from 'zod';
 import { fallbackStory } from './story';
 import type { Module, QuestStory } from './types';
+/** Zod schema validating AI-generated quest narrative boundaries. */
 export const questSchema=z.object({title:z.string().min(3).max(80),briefing:z.string().min(15).max(600),victory:z.string().min(5).max(200)}).strict();
 type Options={key?:string;model?:string;fetcher?:typeof fetch;pause?:(ms:number)=>Promise<void>;timeoutMs?:number};
-/** Narrative only. It receives anonymous counts and has no execution tools or operation IDs. */
+/**
+ * Generates engaging quest narrative flavor text using Gemini or deterministic fallback.
+ * Strictly narrative: only receives anonymous module name and item count.
+ * Has no access to personal data, email content, file names, or execution tools.
+ * Automatically falls back to deterministic rules if AI generation fails or is unconfigured.
+ */
 export async function generateQuest(module:Module,count:number,options:Options):Promise<QuestStory> {
  const fallback=fallbackStory(module,count);
  if(!options.key||!options.model)return fallback;

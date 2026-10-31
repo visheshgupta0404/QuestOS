@@ -25,3 +25,14 @@ test('sample quest recovery stores IDs only and validates restored choices and e
  assert.equal(restoreDemoDraft('{bad',[]),null);assert.equal(restoreDemoDraft(raw.replace('demo-1','outside'),[]),null);
  assert.equal(restoreDemoDraft(serializeDemoDraft({plan:{...plan,expiresAt:'2000-01-01'},decisions:[],phase:'briefing',timer:60}),[]),null);
 });
+test('changedDemoDecisions returns empty for all-keep decisions and parseLocalReceipts bounds limits',()=>{
+ const mailbox=demoMailbox([]);
+ const keepDecisions=mailbox.map(m=>({id:m.id,action:'keep' as const}));
+ assert.equal(changedDemoDecisions(mailbox,keepDecisions).length,0);
+ assert.equal(parseLocalReceipts(JSON.stringify([{...base,xp:5001}])).length,0);
+ assert.equal(parseLocalReceipts(JSON.stringify([{...base,count:-1}])).length,0);
+ assert.equal(parseLocalReceipts(JSON.stringify([{...base,count:251}])).length,0);
+ const parsed=parseLocalReceipts(JSON.stringify([{...base,decisions:[{id:'d1',action:'archive'}]}]));
+ assert.equal(parsed.length,1);
+ assert.equal(parsed[0].decisions?.length,1);
+});
