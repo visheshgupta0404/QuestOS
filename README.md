@@ -2,6 +2,28 @@
 
 **Play the Game. Clear the Chaos.** A Next.js application for the PromptWars × OUTLIER ’26 hackathon.
 
+## Submission overview
+
+### Chosen vertical
+**Productivity & Workflow Automation — Smart Gamified Email & File Management Assistant.**
+QuestOS transforms mundane digital chores (overwhelmed inboxes and scattered local files) into bite-sized, 60-second micro-quests with progressive XP rewards, deterministic safety boundaries, and reversible operations.
+
+### Approach and logic
+1. **Approval Before Mutation:** AI and heuristics only propose actions. No destructive mutations occur without explicit human approval.
+2. **Context-Aware Recommendations:** Scans identify clutter (e.g. promotional mail >30 days old; duplicate files by SHA-256 hash). Protected items (starred, important, system files) are automatically preserved.
+3. **Deterministic Core + AI Flavor:** The quest logic and batch approval run deterministically. Google Gemini is used strictly for narrative quest briefings using anonymous item counts without exposing user data.
+4. **Idempotency & Reversibility:** State changes are logged in durable receipts with read-after-write verification. Single-click undo restores original Gmail states.
+
+### How the solution works
+- **Inbox Kingdom:** Scans old promotional emails into candidate batches. Users play a 60-second sprint to decide `archive` (remove INBOX), `label` (tag `QuestOS/Cleared`), or `keep`. A pre-execution review shows the exact plan. Upon approval, actions are executed against the Gmail API with read-after-write verification, yielding an auditable receipt with undo capability.
+- **File Forest:** Operates 100% locally in the browser. Hashes files using SHA-256 to isolate exact duplicates, sorts files by extension into organized directories, and packages an auditable ZIP containing `questos-manifest.json`. Originals remain untouched on disk.
+- **Dashboard & Progression:** Gamification engine tracks verified XP, user levels, and badges across completed quests.
+
+### Assumptions made
+- **Safety First:** Permanent message deletion and trashing are intentionally excluded. Only archiving (removing the INBOX label) and applying descriptive labels are permitted.
+- **Privacy Boundary:** Personal data (email bodies, sender names, file contents) never leave the local environment or authorized Google APIs. Gemini AI only receives module type and count.
+- **Zero-Config Demo Mode:** Complete end-to-end functionality (gameplay, simulated execution, browser ZIP creation, local storage) is available immediately without requiring external API credentials. Live mode requires OAuth and database configuration.
+
 ## Live demo and submission
 
 **Public demo:** https://questos-eight-chi.vercel.app
