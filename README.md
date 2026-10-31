@@ -2,6 +2,18 @@
 
 **Play the Game. Clear the Chaos.** A Next.js application for the PromptWars × OUTLIER ’26 hackathon.
 
+## Live demo and submission
+
+**Public demo:** https://questos-eight-chi.vercel.app
+
+Public Gmail quests use labeled sample data. File Forest creates real ZIPs locally in the browser. The live Gmail integration was separately verified on the configured local workspace, including archive and undo of one authorized message. Hosted live Gmail remains disabled pending dedicated persistent storage and production OAuth settings.
+
+- [Pitch deck](submission/QuestOS-Pitch.pptx)
+- [90-second pitch, demo scripts, architecture, business hypothesis and 15 judge answers](docs/SUBMISSION-KIT.md)
+- [Final acceptance and security report](docs/RELEASE-READINESS.md)
+
+![QuestOS landing](docs/screenshots/landing-desktop.png)
+
 ## Run
 
 Requires Node.js 24 and npm.

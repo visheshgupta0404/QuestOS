@@ -1,5 +1,7 @@
 # QuestOS technical audit
 
+**Release update:** A landing page, onboarding, validated pitch deck, submission kit and tested public Vercel demo were subsequently delivered. Historical table entries below describe the technical-audit checkpoint; see [RELEASE-READINESS.md](RELEASE-READINESS.md) for current release status and seven deployed browser tests. Hosted live Gmail and reliable Gemini generation remain incomplete.
+
 Audited on 31 October 2026 in `C:\Projects\QuestOS`. This is a source inspection and execution record, not a roadmap. No secrets, email subjects, message IDs, or email content are included in this public report.
 
 ## Overall finding

@@ -43,3 +43,7 @@ Next.js and TypeScript coordinate the UI and server routes. Google OAuth connect
 - A network failure is not success. Partial executions receive receipts and no XP; undo reconciles the recorded targets.
 - Demo is clearly marked; real provider verification requires configured credentials and consent.
 - Competitive leaderboards, expense processing, code execution, production Google verification, and full cross-device file rewards are outside this MVP.
+
+## Competition release
+
+Public demo deployed at https://questos-eight-chi.vercel.app and opened in Chrome. Seven browser acceptance tests passed against that actual URL. Local lint, TypeScript, 20 unit tests and production build passed. Light 10-slide pitch deck rendered/reviewed; package, geometry and first-party re-import validation passed. See docs/RELEASE-READINESS.md and docs/SUBMISSION-KIT.md. Public Gmail is simulated, real files stay browser-local, and hosted live Gmail remains disabled. Production npm audit is clean; 11 moderate dev-tool findings remain.
