@@ -1,3 +1,4 @@
+import {URL} from 'node:url';
 import {readFile,writeFile} from 'node:fs/promises';
 import {randomBytes} from 'node:crypto';
 try {

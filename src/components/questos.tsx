@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDownToLine, ArrowRight, ArrowUpRight, Archive, Award, Check, CheckCheck, ChevronRight, CircleHelp, Clock3, Cloud, Code2, Coins, Compass, Crown, FileCheck2, Files, Flame, FolderTree, Gamepad2, History, LayoutDashboard, Leaf, Link2, LoaderCircle, LockKeyhole, Mail, Mountain, Plug, RotateCcw, Search, ShieldCheck, Sparkles, Sprout, Swords, Tag, Trophy, Upload, X, Zap } from 'lucide-react';
-import type { Decision, FileEntry, IntegrationStatus, Message, Module, Plan, QuestStory, Receipt } from '@/lib/types';
+import type { Decision, FileEntry, IntegrationStatus, Module, Plan, QuestStory, Receipt } from '@/lib/types';
 import { DEMO_FILES, DEMO_MESSAGES } from '@/lib/demo';
 import { fallbackStory } from '@/lib/story';
 import { recommendCleanup } from '@/lib/recommendations';
@@ -49,8 +49,9 @@ export default function QuestOS() {
   const modeRef = useRef(demo); modeRef.current = demo;
   useEffect(()=>{
     try { const saved = JSON.parse(localStorage.getItem('questos.v1.receipts') || '[]'); if (Array.isArray(saved)) setReceipts(saved.filter((r)=>r && typeof r.id==='string' && ['demo','local'].includes(r.mode) && typeof r.xp==='number').slice(0,200)); } catch { /* Fresh profile */ }
-    api<IntegrationStatus>('/api/status').then(s=>{setStatus(s); if(s.connected) {setDemo(false); api<Receipt[]>('/api/receipts').then(setLiveReceipts).catch(e=>setNotice({text:e.message,error:true}));}}).catch(()=>setNotice({text:'Connection status is unavailable. Local features still work.',error:true})).finally(()=>setReady(true));
-    const auth = new URLSearchParams(location.search).get('auth');
+    api<IntegrationStatus>('/api/status').then(s=>{setStatus(s); if(s.connected && new URLSearchParams(location.search).get('demo')!=='1') {setDemo(false); api<Receipt[]>('/api/receipts').then(setLiveReceipts).catch(e=>setNotice({text:e.message,error:true}));}}).catch(()=>setNotice({text:'Connection status is unavailable. Local features still work.',error:true})).finally(()=>setReady(true));
+    const query=new URLSearchParams(location.search); const initialTab=query.get('tab'); if(initialTab&&['dashboard','files','inbox','integrations','history','rewards'].includes(initialTab))setTab(initialTab as Tab);
+    const auth = query.get('auth');
     if(auth) {setTab('integrations');setNotice({text:auth==='connected'?'Gmail connected. Your next quest can clear real clutter.':auth==='setup-required'?'Live Gmail needs configuration. Follow the setup checklist below.':auth==='denied'?'Google connection was canceled. You can try again.':'Google connection failed. Check the redirect URI, consent settings, and rotated credentials.',error:auth!=='connected'}); history.replaceState({},'',location.pathname);}
   },[]);
   useEffect(()=>{if(ready) {try {localStorage.setItem('questos.v1.receipts',JSON.stringify(receipts));}catch {setNotice({text:'Browser storage is full. This session works, but local progress may not persist.',error:true});}}},[receipts,ready]);

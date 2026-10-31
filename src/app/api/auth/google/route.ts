@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { appUrl, missingConfig } from '@/lib/server/config';
 import { session } from '@/lib/server/session';
 export async function GET() {
-  if (missingConfig().length) return NextResponse.redirect(`${appUrl()}/?auth=setup-required`);
+  if (missingConfig().length) return NextResponse.redirect(`${appUrl()}/dashboard?auth=setup-required`);
   const s = await session();
   s.state = randomBytes(32).toString('base64url');
   s.verifier = randomBytes(48).toString('base64url'); s.stateCreatedAt = Date.now();

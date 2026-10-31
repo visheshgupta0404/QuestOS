@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import JSZip from 'jszip';
 import {readFile} from 'node:fs/promises';
 test('demo inbox requires approval, awards XP, survives refresh and supports undo',async({page})=>{
-  await page.goto('/');await expect(page.getByRole('heading',{name:'A little play. A clearer day.'})).toBeVisible();
+  await page.goto('/dashboard?demo=1');await expect(page.getByRole('heading',{name:'A little play. A clearer day.'})).toBeVisible();
   await page.getByRole('button',{name:'Inbox Kingdom',exact:true}).click();
   await page.getByRole('button',{name:'Scan & start quest'}).click();
   await expect(page.getByRole('heading',{name:'Approve your quest scope'})).toBeVisible();
@@ -23,7 +23,7 @@ test('demo inbox requires approval, awards XP, survives refresh and supports und
   await expect(page.getByText('0 total XP · 250 XP until level 2')).toBeVisible();
 });
 test('File Forest creates a real byte-accurate ZIP and manifest from uploaded files',async({page})=>{
-  await page.goto('/');await page.getByRole('button',{name:'File Forest',exact:true}).click();
+  await page.goto('/dashboard?demo=1');await page.getByRole('button',{name:'File Forest',exact:true}).click();
   await page.getByLabel('Select files to organize').setInputFiles([{name:'notes.txt',mimeType:'text/plain',buffer:Buffer.from('important notes')},{name:'copy.txt',mimeType:'text/plain',buffer:Buffer.from('important notes')},{name:'budget.csv',mimeType:'text/csv',buffer:Buffer.from('item,cost\nCoffee,120')}]);
   await expect(page.getByRole('heading',{name:'Review your organized files'})).toBeVisible();
   await expect(page.getByRole('button',{name:'Approve & download ZIP'})).toHaveCount(0);
@@ -40,7 +40,7 @@ test('File Forest creates a real byte-accurate ZIP and manifest from uploaded fi
   await expect(page.getByRole('link',{name:'Download ZIP again'})).toBeVisible();
 });
 test('mobile dashboard and file game work without layout overflow',async({page})=>{
-  await page.setViewportSize({width:390,height:844});await page.goto('/');
+  await page.setViewportSize({width:390,height:844});await page.goto('/dashboard?demo=1');
   await expect(page.getByRole('heading',{name:'A little play. A clearer day.'})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:'test-results/dashboard-mobile.png',fullPage:true});
@@ -61,8 +61,10 @@ test('public endpoints fail closed and demo quest generation is available',async
 });
 test('desktop dashboard has no browser errors',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.setViewportSize({width:1440,height:1100});await page.goto('/');await expect(page.getByRole('heading',{name:'Choose your next adventure'})).toBeVisible();
+  await page.setViewportSize({width:1440,height:1100});await page.goto('/dashboard?demo=1');await expect(page.getByRole('heading',{name:'Choose your next adventure'})).toBeVisible();
   await page.screenshot({path:'test-results/dashboard-desktop.png',fullPage:true});
   await page.getByRole('button',{name:'Integrations',exact:true}).click();await expect(page.getByRole('heading',{name:'A secure start for your kingdom.'})).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('new visitor can enter the sample quest through landing and onboarding',async({page})=>{await page.goto('/');await expect(page.getByRole('heading',{name:'Play the game. Clear the chaos.'})).toBeVisible();await page.getByRole('link',{name:'Use my own data',exact:true}).click();await expect(page.getByRole('heading',{name:'Start small. Stay in control.'})).toBeVisible();await page.getByRole('link',{name:'Play demo',exact:true}).click();await expect(page.getByRole('heading',{name:'A little play. A clearer day.'})).toBeVisible();});
