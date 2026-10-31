@@ -7,7 +7,8 @@ export async function GET(req: Request) {
   const s = await session();
   const params = new URL(req.url).searchParams;
   const state = params.get('state') || '';
-  const valid = s.state && state.length === s.state.length && timingSafeEqual(Buffer.from(state), Buffer.from(s.state)) && s.stateCreatedAt && Date.now() - s.stateCreatedAt < 600_000;
+  const stateBytes=Buffer.from(state), expectedBytes=Buffer.from(s.state||'');
+  const valid = s.state && stateBytes.length === expectedBytes.length && timingSafeEqual(stateBytes,expectedBytes) && s.stateCreatedAt && Date.now() - s.stateCreatedAt < 600_000;
   const verifier = s.verifier;
   delete s.state; delete s.verifier; delete s.stateCreatedAt; await s.save();
   if (!valid || !verifier || !params.get('code') || params.get('error')) return NextResponse.redirect(`${appUrl()}/?auth=denied`);

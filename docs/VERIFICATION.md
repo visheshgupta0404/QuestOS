@@ -1,47 +1,45 @@
-# QuestOS verification record
+# The 3-minute QuestOS demo
 
-Date: 31 October 2026. Workspace: C:\Projects\QuestOS.
+## Before the room
 
-## Verified locally
+Run the production build locally (`npm run build`, then `npm start`). Demo mode works offline after assets load, except the first load still needs the local server. Keep the server running. Use a fresh browser profile for clean demo progress. Preflight the flow and ZIP download. Keep real Gmail content off the projector unless deliberately prepared and consented. Demo labels visibly state that Gmail is simulated.
 
-- Installed dependencies: npm audit reported **0 vulnerabilities** at installation.
-- TypeScript: `npm run typecheck` passed.
-- Unit tests: **3 passed**. Verified content-based duplicate detection, distinct-content preservation, case-insensitive path collisions, actual ZIP bytes and manifest, duplicate retention, empty/oversized selection rejection, path sanitization and Windows-reserved filename handling.
-- Browser tests (Chromium): **5 passed**. Verified demo choice gameplay, no receipt before approval, XP after approval, persisted activity, undo and XP reversal; actual file upload and ZIP download with contents read independently; mobile sorting gameplay and no document overflow; cross-origin rejection and unauthenticated live API rejection; deterministic quest API, invalid input rejection, integration UI, and no desktop page errors.
-- Production Next.js build passed. All nine API routes and the dashboard compiled successfully.
-- Desktop (1440 px) and mobile (390 px) screenshots visually inspected. Fixed missing accessible names on mobile navigation and improved secondary text readability.
-- Git initialized on `main`; `.env.local` is ignored. No remote repository was configured or pushed.
-- Connected GitHub identity read: `visheshgupta0404`.
-- Connected Vercel account queried for QuestOS projects: none returned. No project created or deployment performed.
+## 0:00–0:25 — The problem
 
-## Not verified — requires operator setup
+“We don’t avoid digital chores because they’re hard. We avoid them because they never feel done. QuestOS turns those tiny tasks into fast, satisfying adventures—with real results you can inspect.”
 
-- Access to Google Cloud project questos-513307 and rotation of the exposed OAuth secret. Configuration flags are operator attestations, not IAM verification.
-- Real OAuth consent/token refresh/revocation with the existing test account.
-- Supabase migrations applied and real account-scoped persistence/concurrent claims.
-- Real Gmail archive/label, read-after-write verification, partial interruption recovery, and undo. The server implementation exists; successful demo tests do not establish real Gmail access.
-- Gemini generation using an active model and API key. The fallback story path is verified.
-- GitHub remote publication and Vercel deployment/domain/callback setup.
+Open the dashboard. Point out two playable realms and the separation between approval and execution.
 
-## Live acceptance test
+## 0:25–1:20 — Inbox Kingdom
 
-1. Verify project access, rotate the compromised OAuth secret, populate `.env.local`, apply both SQL migrations, and restart the server.
-2. Connect the test account from Integrations. Confirm the displayed account email. Inspect the session cookie flags using browser developer tools without copying its value.
-3. Prepare two disposable **promotional** messages older than 30 days in the inbox, without starred/important labels. If no candidates match, the empty state is expected; do not broaden scanning silently.
-4. Scan and inspect exact candidates. Play, keep all unrelated messages, choose archive for one prepared message and label for the other. Review and approve.
-5. Independently inspect Gmail: archived message absent from inbox but still in All Mail; labeled message has QuestOS/Cleared and remains in inbox. Receipt must be verified with 50 XP if both were actual changes.
-6. Refresh. Check the durable receipt. Retry the same approved plan ID: it must return the same receipt and perform no new changes or grant extra XP.
-7. Undo. Check original inbox placement restored, quest-added label association removed, unrelated labels preserved, receipt undone, and XP reversed.
-8. In an isolated test database/account, simulate an interrupted Gmail request after recording targets. Confirm a partial receipt gets no XP and undo reconciles targets. Do not perform failure injection on important mail.
-9. Disconnect; confirm session cleared and Google grant revoked (or the manual-revocation notice appears).
+Open Inbox Kingdom, Scan & start quest. Review the rule-based recommendations and approve the candidate scope before playing. Press 1 to archive an old promotion, 2 to label something useful, and 3 to keep a message. Make all six choices. Pause on Review: “The game proposes. You approve.” Change one decision to show control. Approve demo cleanup. Show XP, then open the receipt. Be explicit: this is simulated Gmail data. If live OAuth was preflighted, use a separate prepared real account and show the corresponding Gmail labels after execution. Do not claim live functionality was tested if it was not.
 
-Screenshots generated by tests are under ignored `test-results/`. They are local QA artifacts, not proof of external provider access.
+## 1:20–2:10 — File Forest
 
-## Deadline continuation — isolated storage and public source
+Try the six sample files or upload a prepared small batch. The sample brief and its copy have exactly identical bytes. Review destinations and the duplicate first, approve the plan, then play the sorting challenge and review the final output. Approve & download ZIP. Open it and inspect Documents/, Spreadsheets/, Code/, and questos-manifest.json. “These files were actually organized. Every original is untouched.”
 
-- Implemented isolated local SQLite with automatic schema creation, durable plans/receipts, atomic execution claims, and account-scoped AI budgets. Existing Supabase projects were not modified. Local storage is refused on Vercel.
-- TypeScript, production build, five unit tests, and all five Chromium browser tests pass with local storage enabled.
-- Public repository created and source pushed: https://github.com/visheshgupta0404/QuestOS (main). Public visibility independently verified using the unauthenticated GitHub API.
-- Ignored environment, SQLite data, and setup screenshots excluded from commits. Staged source scanned for credential patterns before initial publication.
-- Google project access verified in Console; operator reported completing secret rotation. OAuth consent flow opened for the test account; live Gmail connection/execution still needs consent and verification.
-- Gemini credential successfully authenticated the model catalog (HTTP 200), and configured model appeared. Actual generation returned HTTP 503; a catalog-listed alternate returned 404. Built-in story fallback remains available. Do not claim live Gemini generation is verified.
+## 2:10–2:40 — Trust and rewards
+
+Open Activity & receipts. Undo the inbox quest. Show XP reversal. For File Forest explain: discard the ZIP; no original needs restoring. Open Achievements. “A satisfying loop: play, approve, execute, verify, reward—and undo.”
+
+## 2:40–3:00 — Why this wins
+
+“Gamification usually puts points on top of work. QuestOS makes the interaction itself produce the work: every inbox choice maps to a real, reversible label delta; every file decision maps to a verified output. Two realms today. Expense Empire and Code Citadel next.”
+
+## One-line pitch
+
+**QuestOS is the playable operating layer for your digital chores: clear the quest, clear the chaos.**
+
+## Architecture in one breath
+
+Next.js and TypeScript coordinate the UI and server routes. Google OAuth connects Gmail. Supabase stores account-scoped plans and receipts. Gemini writes optional quest flavor from anonymous counts. Phaser animates the trail; Framer Motion animates the interface. Browser File API, SHA-256 and JSZip organize files entirely on device. Vercel hosts the Next.js app.
+
+## Honest answers for judges
+
+- AI does not decide what to delete or execute. It creates narrative; deterministic code owns action validation.
+- File duplicates mean byte-identical SHA-256 hashes, not semantic similarity. File categories use extensions, not content classification.
+- The timer never authorizes changes. A separate approval screen does.
+- Gmail actions are archive and label only. We do not delete or send emails.
+- A network failure is not success. Partial executions receive receipts and no XP; undo reconciles the recorded targets.
+- Demo is clearly marked; real provider verification requires configured credentials and consent.
+- Competitive leaderboards, expense processing, code execution, production Google verification, and full cross-device file rewards are outside this MVP.

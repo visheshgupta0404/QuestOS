@@ -19,7 +19,7 @@ export default function GameBoard({progress,total,kind}:{progress:number;total:n
             const x = 60 + i * (640 / Math.max(1,Math.min(total,12)-1));
             const token = this.add.rectangle(x,100,32,25,kind==='inbox'?0xfaf3da:0xe7b76b).setStrokeStyle(2,0xb6c9a4);
             const label = this.add.text(x,100,kind==='inbox'?'✉':'▰',{fontSize:'22px',color:'#56714c'}).setOrigin(.5);
-            this.tweens.add({targets:[token,label], y:93, duration:900+i*80,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+            if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches)this.tweens.add({targets:[token,label], y:93, duration:900+i*80,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
             this.events.on('update',()=>{const done=i<latest.current; token.setFillStyle(done?0x467653:0xfaf3da); label.setColor(done?'#ffffff':'#56714c');});
           }
           const hero = this.add.circle(48,142,8,0xda8859);
@@ -28,7 +28,7 @@ export default function GameBoard({progress,total,kind}:{progress:number;total:n
         }
       }
       game.current = new Phaser.Game({type:Phaser.CANVAS,width:760,height:170,parent:parent.current,transparent:true,scene:QuestScene,banner:false,audio:{noAudio:true},fps:{target:30},scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH}});
-    });
+    }).catch(()=>{/* The board is decorative; accessible task controls remain usable if the renderer cannot load. */});
     return ()=>{disposed=true;game.current?.destroy(true);game.current=null;};
   },[kind,total]);
   return <div className="game-board" ref={parent} aria-hidden="true"/>;

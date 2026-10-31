@@ -2,9 +2,9 @@ import 'server-only';
 import { authenticated } from './session';
 import { ApiError } from './config';
 import type { Message } from '../types';
-export async function googleFetch(path: string, init?: RequestInit) {
+export async function googleFetch(path: string, init?: RequestInit, forceRefresh = false) {
   const s = await authenticated();
-  if (!s.accessToken || (s.expiresAt || 0) < Date.now() + 60_000) {
+  if (forceRefresh || !s.accessToken || (s.expiresAt || 0) < Date.now() + 60_000) {
     const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', body: new URLSearchParams({ client_id: process.env.GOOGLE_CLIENT_ID!, client_secret: process.env.GOOGLE_CLIENT_SECRET!, refresh_token: s.refreshToken!, grant_type: 'refresh_token' }), signal: AbortSignal.timeout(15000) });
     if (!response.ok) throw new ApiError(401, 'Google access expired or was revoked. Disconnect and reconnect Gmail.');
     const token = await response.json();

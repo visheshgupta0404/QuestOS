@@ -30,3 +30,13 @@ test('can retain duplicates explicitly, rejects empty/oversized selections and n
   await assert.rejects(analyzeFiles(Array.from({length:251},()=>new File([''],'x'))),/250/);
   await assert.rejects(analyzeFiles([{size:MAX_TOTAL_BYTES+1} as File]),/100 MB/);
 });
+test('unreadable files fail clearly, unknown types are retained, and sanitized names cannot overwrite',async()=>{
+  const unreadable={name:'locked.txt',size:10,arrayBuffer:async()=>{throw new Error('Permission denied');}} as unknown as File;
+  await assert.rejects(analyzeFiles([unreadable]),/Could not read "locked.txt"/);
+  const entries=await analyzeFiles([new File(['a'],'a:b.txt'),new File(['b'],'a?b.txt'),new File(['binary'],'unknown.weird')]);
+  assert.equal(entries[2].category,'Other');assert.notEqual(entries[0].path,entries[1].path);
+  const {blob}=await createOrganizedZip(entries,false);const zip=await JSZip.loadAsync(await blob.arrayBuffer());
+  assert.equal(await zip.file(entries[2].path)!.async('text'),'binary');
+  for(const [i,e] of entries.entries())assert.equal(await e.file.text(),['a','b','binary'][i]);
+  await assert.rejects(createOrganizedZip([],true),/no approved files/);
+});

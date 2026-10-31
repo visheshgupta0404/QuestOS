@@ -12,11 +12,13 @@ export class LocalStore {
     if(path!==':memory:')mkdirSync(dirname(path),{recursive:true});
     this.sqlite=new DatabaseSync(path);
     this.sqlite.exec(`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
-      CREATE TABLE IF NOT EXISTS quest_plans(id TEXT PRIMARY KEY,user_id TEXT NOT NULL,messages TEXT NOT NULL,claimed INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),expires_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS quest_plans(id TEXT PRIMARY KEY,user_id TEXT NOT NULL,messages TEXT NOT NULL,claimed INTEGER NOT NULL DEFAULT 0,play_approved INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),expires_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS quest_receipts(id TEXT PRIMARY KEY,user_id TEXT NOT NULL,status TEXT NOT NULL,count INTEGER NOT NULL DEFAULT 0,changes TEXT NOT NULL DEFAULT '[]',detail TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
       CREATE TABLE IF NOT EXISTS quest_ai_budget(user_id TEXT PRIMARY KEY,window_start INTEGER NOT NULL,count INTEGER NOT NULL);
       CREATE INDEX IF NOT EXISTS plans_owner ON quest_plans(user_id,created_at);
       CREATE INDEX IF NOT EXISTS receipts_owner ON quest_receipts(user_id,created_at);`);
+    const columns=this.sqlite.prepare('PRAGMA table_info(quest_plans)').all() as Row[];
+    if(!columns.some(c=>c.name==='play_approved'))this.sqlite.exec('ALTER TABLE quest_plans ADD COLUMN play_approved INTEGER NOT NULL DEFAULT 0');
   }
   from(table: string) { if(!TABLES.has(table))throw new Error('Unknown table');return new LocalQuery(this.sqlite,table); }
   async rpc(name: string,args:{owner_id:string}) {

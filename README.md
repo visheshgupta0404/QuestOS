@@ -35,7 +35,7 @@ This mode needs a persistent local disk and Node 24. It deliberately refuses loc
 3. Keep Gmail API enabled. Set the authorized redirect URI to exactly `http://localhost:3000/api/auth/callback/google`.
 4. Configure OAuth consent with `openid`, `email`, and `https://www.googleapis.com/auth/gmail.modify`. In testing, add `visheshg990@gmail.com` as a test user. Testing refresh tokens for Gmail scopes may expire after seven days; reconnect when needed.
 5. Fill `.env.local` using the template. Set `GOOGLE_PROJECT_VERIFIED=true` and `GOOGLE_SECRET_ROTATED=true` only after doing those steps. These flags are operator attestations, not automated Google IAM checks.
-6. Create/open your Supabase project and set `SUPABASE_URL` and its server-only `SUPABASE_SERVICE_ROLE_KEY` locally. Run both SQL files in `supabase/migrations/` in order using the Supabase SQL Editor.
+6. Create/open your Supabase project and set `SUPABASE_URL` and its server-only `SUPABASE_SERVICE_ROLE_KEY` locally. Run all three SQL files in `supabase/migrations/` in order using the Supabase SQL Editor.
 7. Restart the dev server, open Integrations, and select Connect Gmail. Grant permission. Switching to Live workspace alone does not connect Google.
 8. Scan, inspect the candidate batch, play, review the exact actions, approve a small test batch, compare with Gmail, and test Undo. Live OAuth and mutation verification require your credentials and interactive consent; automated local tests do not prove live access.
 

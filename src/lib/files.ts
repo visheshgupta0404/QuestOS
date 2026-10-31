@@ -24,7 +24,9 @@ export async function analyzeFiles(files: File[]): Promise<FileEntry[]> {
   const paths = new Set<string>();
   const entries: FileEntry[] = [];
   for (const [index, file] of files.entries()) {
-    const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()))).map(b => b.toString(16).padStart(2,'0')).join('');
+    let bytes: ArrayBuffer;
+    try { bytes=await file.arrayBuffer(); } catch { throw new Error(`Could not read "${file.name}". Choose the file again. Originals have not been changed.`); }
+    const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))).map(b => b.toString(16).padStart(2,'0')).join('');
     const duplicateOf = seen.get(hash);
     const id = `file-${index}`;
     if (!duplicateOf) seen.set(hash, id);
@@ -38,10 +40,13 @@ export async function analyzeFiles(files: File[]): Promise<FileEntry[]> {
   return entries;
 }
 export async function createOrganizedZip(entries: FileEntry[], omitDuplicates: boolean, onProgress?: (percent: number) => void) {
+  if(!entries.length)throw new Error('There are no approved files to pack.');
   const zip = new JSZip();
   const included = entries.filter(e => !omitDuplicates || !e.duplicateOf);
   const manifest = entries.map(e => ({ original: e.file.name, output: omitDuplicates && e.duplicateOf ? null : e.path, sha256: e.hash, bytes: e.file.size, duplicateOf: e.duplicateOf ? entries.find(x=>x.id === e.duplicateOf)?.file.name : null }));
-  for (const e of included) zip.file(e.path, await e.file.arrayBuffer());
+  for (const e of included) {
+    try { zip.file(e.path, await e.file.arrayBuffer()); } catch { throw new Error(`Could not pack "${e.file.name}". No files were deleted. Re-select your files and retry.`); }
+  }
   zip.file('questos-manifest.json', JSON.stringify({ version: 1, createdAt: new Date().toISOString(), originalsModified: false, files: manifest }, null, 2));
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 3 } }, m=>onProgress?.(Math.round(m.percent)));
   // Verify central directory, file count, and byte lengths before offering download.

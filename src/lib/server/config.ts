@@ -1,4 +1,6 @@
 import 'server-only';
+import { ApiError } from '../errors';
+export { ApiError } from '../errors';
 export function missingConfig() {
   const required = ['APP_URL','SESSION_SECRET','GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET',...(process.env.QUESTOS_STORAGE === 'local' && !process.env.VERCEL ? [] : ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY'])];
   const missing = required.filter(k=>!process.env[k]);
@@ -16,7 +18,6 @@ export function appUrl() {
 export function sameOrigin(req: Request) {
   if (req.headers.get('origin') !== appUrl()) throw new ApiError(403, 'Request origin is not allowed.');
 }
-export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 export function apiError(error: unknown) {
   if (error instanceof ApiError) return Response.json({ error: error.message }, { status: error.status });
   // Provider errors may include private data; never echo them or log tokens.

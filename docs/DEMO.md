@@ -12,11 +12,11 @@ Open the dashboard. Point out two playable realms and the separation between app
 
 ## 0:25–1:20 — Inbox Kingdom
 
-Open Inbox Kingdom, Scan & start quest. Press 1 to archive an old promotion, 2 to label something useful, and 3 to keep a message. Make all six choices. Pause on Review: “The game proposes. You approve.” Change one decision to show control. Approve demo cleanup. Show XP, then open the receipt. Be explicit: this is simulated Gmail data. If live OAuth was preflighted, use a separate prepared real account and show the corresponding Gmail labels after execution. Do not claim live functionality was tested if it was not.
+Open Inbox Kingdom, Scan & start quest. Review the rule-based recommendations and approve the candidate scope before playing. Press 1 to archive an old promotion, 2 to label something useful, and 3 to keep a message. Make all six choices. Pause on Review: “The game proposes. You approve.” Change one decision to show control. Approve demo cleanup. Show XP, then open the receipt. Be explicit: this is simulated Gmail data. If live OAuth was preflighted, use a separate prepared real account and show the corresponding Gmail labels after execution. Do not claim live functionality was tested if it was not.
 
 ## 1:20–2:10 — File Forest
 
-Try the six sample files or upload a prepared small batch. The sample brief and its copy have exactly identical bytes. Play the sorting challenge, review the destinations, point out the duplicate. Approve & download ZIP. Open it and inspect Documents/, Spreadsheets/, Code/, and questos-manifest.json. “These files were actually organized. Every original is untouched.”
+Try the six sample files or upload a prepared small batch. The sample brief and its copy have exactly identical bytes. Review destinations and the duplicate first, approve the plan, then play the sorting challenge and review the final output. Approve & download ZIP. Open it and inspect Documents/, Spreadsheets/, Code/, and questos-manifest.json. “These files were actually organized. Every original is untouched.”
 
 ## 2:10–2:40 — Trust and rewards
 

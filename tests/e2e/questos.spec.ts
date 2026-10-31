@@ -5,6 +5,8 @@ test('demo inbox requires approval, awards XP, survives refresh and supports und
   await page.goto('/');await expect(page.getByRole('heading',{name:'A little play. A clearer day.'})).toBeVisible();
   await page.getByRole('button',{name:'Inbox Kingdom',exact:true}).click();
   await page.getByRole('button',{name:'Scan & start quest'}).click();
+  await expect(page.getByRole('heading',{name:'Approve your quest scope'})).toBeVisible();
+  await page.getByRole('button',{name:'Approve quest & play'}).click();
   await expect(page.getByRole('heading',{name:'Your weekly design inspiration'})).toBeVisible();
   await page.getByRole('button',{name:'Archive Clear from inbox 1'}).click();
   await page.getByRole('button',{name:'Label Add QuestOS/Cleared 2'}).click();
@@ -23,8 +25,10 @@ test('demo inbox requires approval, awards XP, survives refresh and supports und
 test('File Forest creates a real byte-accurate ZIP and manifest from uploaded files',async({page})=>{
   await page.goto('/');await page.getByRole('button',{name:'File Forest',exact:true}).click();
   await page.getByLabel('Select files to organize').setInputFiles([{name:'notes.txt',mimeType:'text/plain',buffer:Buffer.from('important notes')},{name:'copy.txt',mimeType:'text/plain',buffer:Buffer.from('important notes')},{name:'budget.csv',mimeType:'text/csv',buffer:Buffer.from('item,cost\nCoffee,120')}]);
-  await expect(page.getByRole('heading',{name:'Bring order to the wild'})).toBeVisible();
-  await page.getByRole('button',{name:'Go straight to review'}).click();
+  await expect(page.getByRole('heading',{name:'Review your organized files'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Approve & download ZIP'})).toHaveCount(0);
+  await page.getByRole('button',{name:'Approve plan & play'}).click();
+  for(const category of ['Documents','Documents','Spreadsheets'])await page.getByRole('button',{name:category,exact:true}).click();
   await expect(page.getByText('Omitted · exact duplicate')).toBeVisible();
   const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Approve & download ZIP'}).click();
   const download=await downloadPromise;expect(download.suggestedFilename()).toBe('questos-file-forest.zip');
@@ -41,6 +45,7 @@ test('mobile dashboard and file game work without layout overflow',async({page})
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:'test-results/dashboard-mobile.png',fullPage:true});
   await page.getByRole('button',{name:'File Forest',exact:true}).click();await page.getByRole('button',{name:'Try with 6 sample files'}).click();
+  await page.getByRole('button',{name:'Approve plan & play'}).click();
   for(const category of ['Documents','Documents','Documents','Spreadsheets','Code','Documents'])await page.getByRole('button',{name:category,exact:true}).click();
   await expect(page.getByRole('heading',{name:'Review your organized files'})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
