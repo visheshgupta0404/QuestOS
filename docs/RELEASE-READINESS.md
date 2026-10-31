@@ -88,3 +88,7 @@ The application avoids printing provider secrets, and the app/public-source scan
 - `README.md`: public URL, setup, features, architecture/security details, demo links, screenshots and known limitations.
 
 No unfinished world, unvalidated revenue/pricing hypothesis, unreliable AI response, or sample mailbox is presented as a verified live capability.
+
+## Final deployed release confirmation
+
+Production deployment dpl_FNNBBa3Ya7zqQuxopY5Z1d9nYNyH reached READY using commit 90f289cd6fae11359752c3dcb89ed0c6cd4022df. All seven public browser tests passed again against https://questos-eight-chi.vercel.app after that deployment (26.6 seconds). Landing, onboarding and dashboard also returned HTTP 200. This supersedes the earlier deployment checkpoint above. Final deck revision passed package integrity, geometry/heading checks and first-party re-import with 10 slides and no findings.
